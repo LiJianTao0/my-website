@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>我的主页 - 个人网站</title>
+    <!-- Use relative paths so it works fine with Vite base config -->
+    <link rel="stylesheet" href="./src/css/style.css" />
+  </head>
+  <body>
+    
+    <div id="app" class="book-scene">
+      
+      <div class="book">
+        
+        <!-- Book Cover -->
+        <div class="cover">
+          <div class="cover-content">
+            <h1 class="cover-title"><span class="ct-1">李</span><span class="ct-2">建</span><span class="ct-3">涛</span></h1>
+            <p class="cover-subtitle">Personal Website</p>
+            <div class="cover-instruction">点击打开</div>
+          </div>
+        </div>
+
+        <!-- Left Bookmarks (Anchor for Home) -->
+        <div class="bookmarks-container" id="leftBookmarks" style="left: 10%;">
+          <button class="bookmark active" data-filter="all" id="bookmark-home">首页</button>
+        </div>
+
+        <!-- Back to Grid Bookmark (Hidden initially) -->
+        <div class="bookmarks-container" id="componentBookmarks" style="display: none; left: 10%;">
+          <button class="bookmark active" id="btnBackToGrid">← 返回笔记本</button>
+        </div>
+
+        <!-- Right Bookmarks (Slider) -->
+        <div class="bookmarks-container slider-mode" id="gridBookmarks">
+          <button class="bookmark slider-arrow prev-arrow" id="btnPrevCategory" disabled>←</button>
+          
+          <div class="bookmarks-window">
+            <div class="bookmarks-track" id="bookmarksTrack">
+              <!-- Page 1 of categories -->
+              <div class="bookmarks-page active-page" data-page="0">
+                <button class="bookmark" data-filter="button">内容1</button>
+                <button class="bookmark" data-filter="preloader">内容2</button>
+                <button class="bookmark" data-filter="page-transition">内容3</button>
+              </div>
+              <!-- Page 2 of categories -->
+              <div class="bookmarks-page" data-page="1">
+                <button class="bookmark" data-filter="scroll-transition">内容4</button>
+                <button class="bookmark" data-filter="scroll-trigger">内容5</button>
+                <button class="bookmark" data-filter="navbar">内容6</button>
+              </div>
+            </div>
+          </div>
+          
+          <button class="bookmark slider-arrow next-arrow" id="btnNextCategory">→</button>
+        </div>
+
+        <!-- Right Side Sticky Notes (Karteczki Post-it) -->
+        <div class="sticky-notes-container right-side">
+          <button class="sticky-note-tab note-pink" data-action="showcase">
+            <span class="note-text">作品展示</span>
+          </button>
+          <button class="sticky-note-tab note-blue" data-action="submit">
+            <span class="note-text">内容1</span>
+          </button>
+          <button class="sticky-note-tab note-yellow" data-action="content2">
+            <span class="note-text">内容2</span>
+          </button>
+          <button class="sticky-note-tab note-green" data-action="content3">
+            <span class="note-text">内容3</span>
+          </button>
+        </div>
+
+        <!-- Left Base Page -->
+        <div class="page base-left-page">
+          <div class="notebook-margin-line"></div>
+          <div class="page-content" id="leftPageContainer">
+            <!-- Content injected here -->
+          </div>
+        </div>
+        
+        <!-- Right Base Page -->
+        <div class="page base-right-page">
+          <div class="notebook-margin-line"></div>
+          <div class="page-content" id="rightPageContainer">
+            <!-- Content injected here -->
+          </div>
+        </div>
+
+        <!-- Flipping Page (Dynamically used for transitions) -->
+        <div class="page flip-page" style="display: none;">
+          <!-- Front Face -->
+          <div class="page-face front">
+            <div class="notebook-margin-line"></div>
+            <div class="page-content" id="flipFrontContainer">
+            </div>
+          </div>
+          
+          <!-- Back Face -->
+          <div class="page-face back">
+            <div class="notebook-margin-line"></div>
+            <div class="page-content" id="flipBackContainer">
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Templates -->
+    <template id="about-page-template">
+      <div class="about-page">
+        <div class="about-header">
+          <div class="avatar-container">
+            <img src="./avatar.png" alt="我的头像" style="width: 100%; height: 100%; object-fit: cover;" />
+          </div>
+          <div class="about-title-group">
+            <h2 class="brand-title">My Space</h2>
+            <p class="brand-subtitle">李建涛</p>
+          </div>
+        </div>
+
+        <div class="about-mission">
+          <h3 class="mission-title">你好！👋</h3>
+          <p class="mission-text">
+            欢迎来到我的个人主页！
+            <br><br>
+            这里是我放作品、写想法、折腾小工具的地方。无论代码、设计还是学习笔记，都记录在这里。
+            <br><br>
+            欢迎常来逛逛，一起交流进步！🚀
+          </p>
+        </div>
+
+        <div class="about-actions">
+          <div class="sponsor-section">
+            <p class="sponsor-text">想交流或了解更多？欢迎联系我 ☕</p>
+            <button class="sponsor-btn" data-action="contact">
+              联系方式
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
+    
+    <template id="grid-page-template">
+      <h1 class="page-title"></h1>
+      <section class="components-grid">
+      </section>
+    </template>
+
+    <template id="showcase-page-template">
+      <h1 class="page-title"></h1>
+      <section class="components-grid showcase-grid">
+      </section>
+    </template>
+    
+    <template id="submit-instructions-template">
+      <div class="submit-instructions-container">
+        <h2 class="brand-title">提交你的网站</h2>
+        <div class="instructions-card">
+          <h3 class="mission-title">秀出你的作品！🌟</h3>
+          <p class="mission-text">
+            用我们的组件做出了很棒的东西？提交它，就有机会在作品展示区亮相！✨
+          </p>
+        </div>
+      </div>
+    </template>
+
+    <template id="submit-form-template">
+      <div class="submit-form-container">
+        <h2 class="page-title">提交表单</h2>
+        <form id="submitWebsiteForm" class="sketch-form">
+          <!-- Anti-spam Honeypot -->
+          <input type="text" name="_honeypot" id="honeypot" style="display:none" tabindex="-1" autocomplete="off" />
+          
+          <div class="form-group">
+            <label for="siteName">网站名称 <span class="required-asterisk">*</span></label>
+            <input type="text" id="siteName" required maxlength="100" placeholder="例如：我的创意空间" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label for="siteUrl">网站链接 <span class="required-asterisk">*</span></label>
+            <input type="url" id="siteUrl" required maxlength="200" placeholder="https://..." autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label>截图 <span class="required-asterisk">*</span></label>
+            <p style="font-size: 0.8rem; color: var(--text-light-ink); margin-top: -0.3rem; margin-bottom: 0.5rem; font-family: var(--font-body);">
+              需为 16:10 比例（例如 1600x1000px）且小于 5MB，这样与展示卡片完美匹配！
+            </p>
+            <div class="file-drop-zone" id="screenshotDropZone">
+              <input type="file" id="siteScreenshot" accept="image/png, image/jpeg, image/webp" required />
+              <div class="drop-zone-content">
+                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" class="drop-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                <span class="drop-zone-text">点击上传或拖拽文件</span>
+                <span class="drop-zone-hint">支持 PNG、JPG 或 WEBP（最大 5MB）</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="authorName">作者</label>
+            <input type="text" id="authorName" maxlength="100" placeholder="例如：张三" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label for="authorPortfolio">个人主页 / 机构链接</label>
+            <input type="url" id="authorPortfolio" maxlength="200" placeholder="https://yoursite.com" autocomplete="off" />
+          </div>
+          <div class="form-divider"></div>
+          <div class="form-group-row">
+            <div class="form-group form-group-half">
+              <label for="socialLinkedin">LinkedIn</label>
+              <input type="url" id="socialLinkedin" maxlength="200" placeholder="https://linkedin.com/in/..." autocomplete="off" />
+            </div>
+            <div class="form-group form-group-half">
+              <label for="socialX">X (Twitter)</label>
+              <input type="url" id="socialX" maxlength="200" placeholder="https://x.com/..." autocomplete="off" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="contactEmail">邮箱 <span class="form-optional">（选填）</span></label>
+            <input type="email" id="contactEmail" maxlength="150" placeholder="you@email.com — 用于接收入选通知" autocomplete="off" />
+          </div>
+          <div class="form-divider"></div>
+          <div class="form-group">
+            <label>使用的组件 <span class="required-asterisk">*</span></label>
+            <div class="components-checkboxes">
+              <label class="checkbox-item">
+                <input type="checkbox" name="components" value="Buttons" />
+                <span>按钮</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="components" value="Preloaders" />
+                <span>加载动画</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="components" value="Page Transitions" />
+                <span>页面切换</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="components" value="Scroll Transitions" />
+                <span>滚动过渡</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="components" value="Scroll Trigger" />
+                <span>滚动触发</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="components" value="Navbars" />
+                <span>导航栏</span>
+              </label>
+            </div>
+          </div>
+          <button type="submit" class="submit-sketch-btn">提交 🚀</button>
+        </form>
+      </div>
+    </template>
+    
+    <!-- SVG Filters for Squigglevision (Wiggly Sketch Effect) -->
+    <svg style="position: absolute; width: 0; height: 0;" aria-hidden="true">
+      <defs>
+        <filter id="squiggle-0">
+          <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" result="noise" seed="0"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+        <filter id="squiggle-1">
+          <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" result="noise" seed="1"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+        <filter id="squiggle-2">
+          <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" result="noise" seed="2"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+      </defs>
+    </svg>
+    <!-- Mobile Preview Banner -->
+    <div id="mobilePreviewBanner" class="mobile-preview-banner">
+      <div class="marquee-track">
+        <span class="marquee-text">✨ <strong>预览模式：</strong>完整交互体验和源代码请在电脑上访问！</span>
+        <span class="marquee-text">✨ <strong>预览模式：</strong>完整交互体验和源代码请在电脑上访问！</span>
+        <span class="marquee-text">✨ <strong>预览模式：</strong>完整交互体验和源代码请在电脑上访问！</span>
+        <span class="marquee-text">✨ <strong>预览模式：</strong>完整交互体验和源代码请在电脑上访问！</span>
+      </div>
+    </div>
+
+    <!-- Success Popup -->
+    <div id="successPopup" class="success-popup">
+      <h3>感谢提交！🎉</h3>
+      <p>你的作品已提交审核，我们会尽快查看！📝✨</p>
+      <button class="success-close-btn" id="successCloseBtn">关闭</button>
+    </div>
+
+    <!-- Close Book Button (bottom-right, sketchy style) -->
+    <button id="closeBookBtn" title="Close notebook" style="position: fixed; bottom: 1.6rem; right: 1.6rem; z-index: 120; font-family: var(--font-sketch); font-size: 1.05rem; padding: 0.6rem 1.3rem; background: #E24B4A; color: #fff; border: 3px solid #A32D2D; border-radius: 10px; box-shadow: 4px 4px 0 rgba(0,0,0,0.85); cursor: pointer; transform: rotate(-2deg); transition: transform 0.15s, box-shadow 0.15s;">✕ Close</button>
+
+    <script type="module" src="./src/js/main.js"></script>
+  </body>
+</html>

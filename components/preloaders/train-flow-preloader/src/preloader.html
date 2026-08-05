@@ -1,0 +1,31 @@
+<section class="train-preloader-container">
+  <!-- Prevent flash of black screen on reload -->
+  <script>
+    if (sessionStorage.getItem('trainFlowPreloaderHasRun')) {
+      document.currentScript.parentElement.style.display = 'none';
+    }
+  </script>
+  <!-- Single Text Element -->
+  <div class="train-marquee-wrapper">
+    <div class="train-marquee-content">
+      <span class="train-marquee-text">ITOM</span>
+    </div>
+  </div>
+
+  <!-- Image Train -->
+  <div class="train-images-wrapper">
+    <div class="train-images-container">
+      <img class="train-img train-img-0" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600'><rect width='100%25' height='100%25' fill='%23E24B4A'/></svg>" alt="Abstract 1">
+      <img class="train-img train-img-1" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600'><rect width='100%25' height='100%25' fill='%23EF9F27'/></svg>" alt="Abstract 2">
+      <img class="train-img train-img-2" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600'><rect width='100%25' height='100%25' fill='%23639922'/></svg>" alt="Abstract 3">
+      <img class="train-img train-img-3" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600'><rect width='100%25' height='100%25' fill='%231D9E75'/></svg>" alt="Abstract 4">
+      <img class="train-img train-img-4" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600'><rect width='100%25' height='100%25' fill='%23378ADD'/></svg>" alt="Abstract 5">
+      <!-- Hero image — zooms to fullscreen. data-hero marks it as the expand target -->
+      <img class="train-img train-img-5" data-hero src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600'><rect width='100%25' height='100%25' fill='%237F77DD'/></svg>" alt="Hero Image">
+      <!-- Trailing images — keep the train flowing; covered by hero as it expands -->
+      <img class="train-img train-img-6" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600'><rect width='100%25' height='100%25' fill='%23D4537E'/></svg>" alt="Abstract 6">
+      <img class="train-img train-img-7" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600'><rect width='100%25' height='100%25' fill='%23D85A30'/></svg>" alt="Abstract 7">
+      <img class="train-img train-img-8" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600'><rect width='100%25' height='100%25' fill='%23E24B4A'/></svg>" alt="Abstract 8">
+    </div>
+  </div>
+</section>

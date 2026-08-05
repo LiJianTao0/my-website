@@ -1,0 +1,524 @@
+import { gsap } from 'gsap';
+import { components } from '../data/components.js';
+import { fetchShowcaseProjects } from './sanity.js';
+import { turnPage, getIsAnimating } from './animations.js';
+
+let currentFilter = 'all';
+let isFirstLoad = true;
+
+// Intersection Observer for lazy loading iframes and videos
+const observerOptions = {
+  root: null,
+  rootMargin: '100px',
+  threshold: 0.1
+};
+
+const lazyLoadObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const card = entry.target;
+    const mediaContainer = card.querySelector('.card-preview');
+    if (!mediaContainer) return;
+    
+    const type = mediaContainer.dataset.type;
+    const src = mediaContainer.dataset.src;
+
+    if (entry.isIntersecting) {
+      if (!mediaContainer.dataset.loaded) {
+        mediaContainer.dataset.loaded = 'true';
+        if (type === 'video') {
+          mediaContainer.innerHTML = `<video src="${src}" autoplay loop muted playsinline></video>`;
+        } else if (type === 'iframe') {
+          mediaContainer.innerHTML = `<iframe src="${src}" scrolling="no" tabindex="-1" loading="lazy"></iframe>`;
+        }
+        
+        // Add class for smooth fade-in without keyframes
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            mediaContainer.classList.add('is-loaded');
+          });
+        });
+      } else {
+        const video = mediaContainer.querySelector('video');
+        if (video) video.play().catch(e => console.warn("Auto-play prevented", e));
+      }
+    } else {
+      if (mediaContainer.dataset.loaded) {
+        const video = mediaContainer.querySelector('video');
+        if (video) video.pause();
+      }
+    }
+  });
+}, observerOptions);
+
+function createShowcaseCardElement(site) {
+  const card = document.createElement('div');
+  card.className = 'showcase-card';
+  card.style.transform = `rotate(${site.rotation || 0}deg)`;
+
+  // Build social icons HTML
+  let socialsHTML = '';
+  if (site.socials) {
+    if (site.socials.linkedin) {
+      socialsHTML += `<a href="${site.socials.linkedin}" target="_blank" rel="noopener noreferrer nofollow" class="showcase-social" aria-label="LinkedIn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+      </a>`;
+    }
+    if (site.socials.x) {
+      socialsHTML += `<a href="${site.socials.x}" target="_blank" rel="noopener noreferrer nofollow" class="showcase-social" aria-label="X">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </a>`;
+    }
+  }
+
+  // Author: link to portfolio if available
+  const authorHTML = site.authorUrl
+    ? `<a href="${site.authorUrl}" target="_blank" rel="noopener noreferrer nofollow" class="showcase-author-link">作者：${site.author}</a>`
+    : `<span class="showcase-author">作者：${site.author}</span>`;
+
+  card.innerHTML = `
+    <div class="showcase-img-container">
+      <img src="${site.image}" alt="${site.name}" class="showcase-img" loading="lazy" />
+    </div>
+    <div class="showcase-info">
+      <h2>${site.name}</h2>
+      <div class="showcase-meta">
+        <div class="showcase-author-row">
+          ${authorHTML}
+          ${socialsHTML ? `<div class="showcase-socials">${socialsHTML}</div>` : ''}
+        </div>
+        <div class="showcase-tags">
+          ${site.componentsUsed.map(compName => `<span class="showcase-tag">${compName}</span>`).join('')}
+        </div>
+      </div>
+      <a href="${site.url}" target="_blank" rel="noopener noreferrer" class="showcase-link">访问网站 ↗</a>
+    </div>
+  `;
+  
+  return card;
+}
+
+function bindSubmitForm() {
+  const form = document.getElementById('submitWebsiteForm');
+  if (!form) return;
+  
+  // File Drop Zone UI handling
+  const fileInput = document.getElementById('siteScreenshot');
+  const dropZone = document.getElementById('screenshotDropZone');
+  
+  if (fileInput && dropZone) {
+    const dropText = dropZone.querySelector('.drop-zone-text');
+    const dropHint = dropZone.querySelector('.drop-zone-hint');
+    
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files[0]) {
+        dropText.textContent = fileInput.files[0].name;
+        dropHint.textContent = '可以上传了！🚀';
+        dropZone.style.borderColor = 'var(--text-ink)';
+        dropZone.style.background = 'rgba(0,0,0,0.05)';
+      } else {
+        dropText.textContent = '点击上传或拖拽文件';
+        dropHint.textContent = '支持 PNG、JPG 或 WEBP（最大 5MB）';
+        dropZone.style.borderColor = '';
+        dropZone.style.background = '';
+      }
+    });
+
+    // Drag effects
+    ['dragenter', 'dragover'].forEach(eventName => {
+      fileInput.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+      fileInput.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+    });
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Anti-spam: if honeypot is filled, silently ignore
+    const honeypot = form.querySelector('input[name="_honeypot"]');
+    if (honeypot && honeypot.value.trim() !== '') {
+      form.reset();
+      return;
+    }
+    
+    // Validate at least one component is selected
+    const checkedComponents = Array.from(form.querySelectorAll('input[name="components"]:checked')).map(cb => cb.value);
+    if (checkedComponents.length === 0) {
+      alert('请至少选择一个使用的组件。');
+      return;
+    }
+    
+    // UI Loading state
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = '提交中... ⏳';
+    submitBtn.disabled = true;
+
+    try {
+      // Process Screenshot Upload
+      const screenshotInput = document.getElementById('siteScreenshot');
+      let screenshotData = null;
+      
+      if (screenshotInput.files && screenshotInput.files[0]) {
+        const file = screenshotInput.files[0];
+        
+        // Size validation (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          alert('截图过大，请上传小于 5MB 的图片。');
+          submitBtn.textContent = originalText;
+          submitBtn.disabled = false;
+          return;
+        }
+        
+        try {
+          const base64String = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+          });
+          
+          screenshotData = {
+            base64: base64String,
+            filename: file.name,
+            mimeType: file.type
+          };
+        } catch (e) {
+          console.error('Error reading screenshot:', e);
+          alert('无法处理该图片文件。');
+          submitBtn.textContent = originalText;
+          submitBtn.disabled = false;
+          return;
+        }
+      }
+
+      // Gather form data
+      const formData = {
+        siteName: form.querySelector('#siteName').value.trim(),
+        siteUrl: form.querySelector('#siteUrl').value.trim(),
+        authorName: form.querySelector('#authorName').value.trim(),
+        authorPortfolio: form.querySelector('#authorPortfolio').value.trim(),
+        socialLinkedin: form.querySelector('#socialLinkedin').value.trim(),
+        socialX: form.querySelector('#socialX').value.trim(),
+        contactEmail: form.querySelector('#contactEmail').value.trim(),
+        componentsUsed: checkedComponents,
+        screenshot: screenshotData
+      };
+
+      // Send to Vercel Serverless Function
+      const response = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      if (!response.ok) throw new Error('Failed to submit via API');
+
+      // Play sound and display success popup
+      const anim = await import('./animations.js');
+      anim.triggerSubmitSuccess();
+      form.reset();
+    } catch (error) {
+      console.error('Submission error:', error);
+      alert('哎呀！与服务器通信时出了点问题，请稍后再试。');
+    } finally {
+      // Reset button state
+      submitBtn.textContent = originalText;
+      submitBtn.disabled = false;
+    }
+  });
+}
+
+function createCardElement(comp) {
+  const card = document.createElement('a');
+  card.className = 'component-card';
+  card.style.cursor = 'pointer';
+  
+  // Only add href on desktop to absolutely prevent mobile navigation
+  if (window.innerWidth > 900) {
+    card.href = comp.path;
+  }
+  
+  const mediaType = comp.demo ? 'video' : 'iframe';
+  const mediaSrc = comp.demo ? comp.demo : `${comp.path}preview.html`;
+
+  card.innerHTML = `
+    <div class="card-preview" data-type="${mediaType}" data-src="${mediaSrc}">
+      <div style="font-family: var(--font-sketch); color: var(--text-light-ink); font-size: 1.2rem; animation: squiggle 0.3s infinite linear;">预览加载中...</div>
+    </div>
+    <div class="card-info">
+      <h2>${comp.name}</h2>
+      <p>${comp.description}</p>
+    </div>
+  `;
+  
+  card.addEventListener('click', (e) => {
+    if (window.innerWidth <= 900) {
+      e.preventDefault();
+      e.stopPropagation();
+      const preview = card.querySelector('.card-preview');
+      
+      // Create a fullscreen overlay appended to body (outside all containing blocks)
+      const existingOverlay = document.querySelector('.mobile-fullscreen-overlay');
+      if (existingOverlay) {
+        existingOverlay.remove();
+        return;
+      }
+
+      const overlay = document.createElement('div');
+      overlay.className = 'mobile-fullscreen-overlay';
+
+      // Clone the media element (video or iframe) into the overlay
+      const video = preview.querySelector('video');
+      const iframe = preview.querySelector('iframe');
+      
+      if (video) {
+        const clone = video.cloneNode(true);
+        clone.autoplay = true;
+        clone.muted = true;
+        clone.loop = true;
+        clone.playsInline = true;
+        overlay.appendChild(clone);
+      } else if (iframe) {
+        const clone = iframe.cloneNode(true);
+        overlay.appendChild(clone);
+      }
+
+      const hint = document.createElement('div');
+      hint.className = 'fullscreen-close-hint';
+      hint.textContent = '点击任意处关闭 ✖';
+      overlay.appendChild(hint);
+
+      overlay.addEventListener('click', (ev) => {
+        // Don't close if tapping on iframe itself
+        if (ev.target.tagName === 'IFRAME') return;
+        overlay.remove();
+      });
+
+      document.body.appendChild(overlay);
+    }
+  });
+
+  lazyLoadObserver.observe(card);
+  return card;
+}
+
+export function loadCategory(filter, forward = true) {
+  const searchInput = document.getElementById('searchInput');
+  const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
+  let filtered = filter === 'all' 
+    ? components 
+    : components.filter(c => c.tags.includes(filter));
+    
+  if (searchVal) {
+    filtered = filtered.filter(c => 
+      c.name.toLowerCase().includes(searchVal) || 
+      c.description.toLowerCase().includes(searchVal)
+    );
+  }
+
+  let leftContent = document.createElement('div');
+  leftContent.style.height = '100%';
+  
+  let rightContent = document.createElement('div');
+  rightContent.style.height = '100%';
+
+  if (filter === 'showcase') {
+    const leftGridTemplate = document.getElementById('showcase-page-template').content.cloneNode(true);
+    const rightGridTemplate = document.getElementById('showcase-page-template').content.cloneNode(true);
+    
+    leftGridTemplate.querySelector('.page-title').textContent = '作品展示';
+    rightGridTemplate.querySelector('.page-title').textContent = '';
+    
+    const leftGrid = leftGridTemplate.querySelector('.components-grid');
+    leftGrid.innerHTML = '';
+    const rightGrid = rightGridTemplate.querySelector('.components-grid');
+    rightGrid.innerHTML = '';
+    
+    // turnPage expects HTML strings, not DocumentFragments. Convert them:
+    const tempLeft = document.createElement('div');
+    tempLeft.appendChild(leftGridTemplate);
+    const tempRight = document.createElement('div');
+    tempRight.appendChild(rightGridTemplate);
+    
+    turnPage(tempLeft.innerHTML, tempRight.innerHTML, true);
+    
+    return;
+  } else if (filter === 'submit' || filter === 'content2' || filter === 'content3' || filter === 'contact') {
+    const blankLeft = document.getElementById('grid-page-template').content.cloneNode(true);
+    const blankRight = document.getElementById('grid-page-template').content.cloneNode(true);
+    blankLeft.querySelector('.page-title').textContent = '';
+    blankRight.querySelector('.page-title').textContent = '';
+    blankLeft.querySelector('.components-grid').innerHTML = '';
+    blankRight.querySelector('.components-grid').innerHTML = '';
+    leftContent.appendChild(blankLeft);
+    rightContent.appendChild(blankRight);
+  } else if (filter === 'all' && !searchVal) {
+    // Home layout: About on left, All components on right
+    const aboutTemplate = document.getElementById('about-page-template');
+    leftContent.appendChild(aboutTemplate.content.cloneNode(true));
+    
+    const rightGridTemplate = document.getElementById('grid-page-template').content.cloneNode(true);
+    rightGridTemplate.querySelector('.page-title').textContent = '简介';
+    
+    const rightGrid = rightGridTemplate.querySelector('.components-grid');
+    filtered.forEach(comp => rightGrid.appendChild(createCardElement(comp)));
+    rightContent.appendChild(rightGridTemplate);
+  } else {
+    // Category layout: Split components evenly between left and right pages
+    const leftGridTemplate = document.getElementById('grid-page-template').content.cloneNode(true);
+    const rightGridTemplate = document.getElementById('grid-page-template').content.cloneNode(true);
+    
+    let leftTitle = '';
+    if (filter === 'button') leftTitle = '标题0';
+    else if (filter === 'preloader') leftTitle = '标题0';
+    else if (filter === 'page-transition') leftTitle = '标题0';
+    else if (filter === 'scroll-transition') leftTitle = '标题0';
+    else if (filter === 'scroll-trigger') leftTitle = '标题0';
+    else if (filter === 'navbar') leftTitle = '标题0';
+    else leftTitle = filter.toUpperCase().replace('-', ' ');
+
+    leftGridTemplate.querySelector('.page-title').textContent = leftTitle;
+    rightGridTemplate.querySelector('.page-title').textContent = '标题1';
+
+    const leftGrid = leftGridTemplate.querySelector('.components-grid');
+    const rightGrid = rightGridTemplate.querySelector('.components-grid');
+
+    if (filter === 'navbar' || filter === 'scroll-trigger') {
+      leftContent.appendChild(leftGridTemplate);
+      rightGrid.style.display = 'block';
+      rightContent.appendChild(rightGridTemplate);
+    } else if (filtered.length === 0) {
+      leftContent.appendChild(leftGridTemplate);
+      
+      rightGrid.style.display = 'block';
+      const emptyMsg = document.createElement('div');
+      emptyMsg.className = 'empty-category-message';
+      emptyMsg.innerHTML = `
+        <div class="empty-doodle">✏️</div>
+        <h3>敬请期待！</h3>
+        <p>该分类的新组件正在路上，记得常来看看！🚀</p>
+      `;
+      rightGrid.appendChild(emptyMsg);
+      rightContent.appendChild(rightGridTemplate);
+    } else {
+      const half = Math.ceil(filtered.length / 2);
+      const leftComps = filtered.slice(0, half);
+      const rightComps = filtered.slice(half);
+
+      leftComps.forEach(comp => leftGrid.appendChild(createCardElement(comp)));
+      rightComps.forEach(comp => rightGrid.appendChild(createCardElement(comp)));
+
+      leftContent.appendChild(leftGridTemplate);
+      rightContent.appendChild(rightGridTemplate);
+    }
+  }
+
+  const baseLeftPage = document.querySelector('.base-left-page');
+  const isHome = filter === 'all' && !searchVal;
+
+  if (isFirstLoad || window.innerWidth <= 900) {
+    if (isHome) baseLeftPage.classList.add('is-cover-back');
+    else baseLeftPage.classList.remove('is-cover-back');
+
+    document.getElementById('leftPageContainer').innerHTML = '';
+    document.getElementById('leftPageContainer').appendChild(leftContent);
+    document.getElementById('rightPageContainer').innerHTML = '';
+    document.getElementById('rightPageContainer').appendChild(rightContent);
+    isFirstLoad = false;
+    
+    // Re-observe cards after injection
+    document.querySelectorAll('.component-card').forEach(c => lazyLoadObserver.observe(c));
+
+    if (filter === 'submit') {
+      bindSubmitForm();
+    }
+  } else {
+    if (getIsAnimating()) return; // Skip if a page turn is already in progress
+    turnPage(leftContent.innerHTML, rightContent.innerHTML, forward, isHome).then(() => {
+      document.querySelectorAll('.component-card').forEach(c => lazyLoadObserver.observe(c));
+
+      if (filter === 'submit') {
+        bindSubmitForm();
+      }
+    });
+  }
+}
+
+export function renderComponents() {
+  loadCategory(currentFilter, true);
+}
+
+// Reset the notebook back to the home page state (used when closing the book)
+export function resetToHome() {
+  currentFilter = 'all';
+  isFirstLoad = true;
+  document.querySelectorAll('#gridBookmarks .bookmark:not(.slider-arrow), #leftBookmarks .bookmark').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === 'all');
+  });
+  document.querySelectorAll('.sticky-note-tab[data-action], .sponsor-btn[data-action]').forEach(t => {
+    t.classList.remove('active');
+  });
+  loadCategory('all', true);
+}
+
+export function initGridFilters() {
+  const filterBtns = document.querySelectorAll('#gridBookmarks .bookmark:not(.slider-arrow), #leftBookmarks .bookmark');
+  const stickyTabs = document.querySelectorAll('.sticky-note-tab[data-action], .sponsor-btn[data-action]');
+  const filtersOrder = ['all', 'button', 'preloader', 'page-transition', 'scroll-transition', 'scroll-trigger', 'navbar', 'showcase', 'submit', 'content2', 'content3', 'contact'];
+  
+  function changeFilter(newFilter) {
+    if (getIsAnimating()) return;
+    
+    const oldFilter = currentFilter;
+    if (newFilter === oldFilter) return;
+
+    // Update active class on bookmarks
+    filterBtns.forEach(b => {
+      if (b.dataset.filter === newFilter) {
+        b.classList.add('active');
+      } else {
+        b.classList.remove('active');
+      }
+    });
+
+    // Update active class on sticky note tabs
+    stickyTabs.forEach(tab => {
+      if (tab.dataset.action === newFilter) {
+        tab.classList.add('active');
+      } else {
+        tab.classList.remove('active');
+      }
+    });
+
+    currentFilter = newFilter;
+
+    const oldIndex = filtersOrder.indexOf(oldFilter);
+    const newIndex = filtersOrder.indexOf(newFilter);
+    const forward = newIndex > oldIndex;
+
+    loadCategory(currentFilter, forward);
+  }
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('active') || getIsAnimating()) return;
+      changeFilter(btn.dataset.filter);
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    const tab = e.target.closest('.sticky-note-tab[data-action], .sponsor-btn[data-action]');
+    if (!tab) return;
+    if (tab.classList.contains('active') || getIsAnimating()) return;
+    changeFilter(tab.dataset.action);
+  });
+
+  document.addEventListener('input', (e) => {
+    if (e.target && e.target.id === 'searchInput') {
+      isFirstLoad = true; // force instant reload on search without page flip
+      loadCategory(currentFilter, true);
+    }
+  });
+}

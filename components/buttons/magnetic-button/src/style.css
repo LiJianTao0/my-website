@@ -1,0 +1,54 @@
+:root {
+  --t-btn-bg: #111111; 
+  --t-btn-color: #ffffff; 
+  --t-btn-hover-bg: #ea4aaa; 
+  --t-btn-radius: 99px;
+  --t-btn-padding: 1.5rem 3rem;
+}
+.t-magnetic-btn {
+  padding: var(--t-btn-padding);
+  border-radius: var(--t-btn-radius);
+  background: var(--t-btn-bg);
+  color: var(--t-btn-color);
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  will-change: transform;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  z-index: 1;
+}
+.t-hover-circle {
+  position: absolute;
+  background: var(--t-btn-hover-bg);
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 0;
+}
+.t-text {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+  display: inline-block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-magnetic-btn {
+    transition: background-color 0.3s ease, color 0.3s ease !important;
+  }
+  .t-magnetic-btn:hover {
+    background-color: var(--t-btn-hover-bg) !important;
+    color: var(--t-btn-color) !important;
+  }
+  .t-hover-circle {
+    display: none !important;
+  }
+}
