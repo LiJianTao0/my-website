@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>内容展示滚动 - 预览</title>
-  <link rel="stylesheet" href="./src/messy-stacking-sections.css" />
+  <title>内容展示滚动 - 预览</title>
   <style>
     /* Reset for preview */
     body, html {
@@ -14,6 +13,11 @@
       font-family: system-ui, -apple-system, sans-serif;
     }
   </style>
+  <script type="module" crossorigin src="../../../assets/scroll-transitions-messy-stacking-sections-preview-DiYTRLMO.js"></script>
+  <link rel="modulepreload" crossorigin href="../../../assets/modulepreload-polyfill-Dezn_h7o.js">
+  <link rel="modulepreload" crossorigin href="../../../assets/gsap-D_956-p2.js">
+  <link rel="modulepreload" crossorigin href="../../../assets/lenis-CW6SwARX.js">
+  <link rel="stylesheet" crossorigin href="../../../assets/scroll-transitions-messy-stacking-sections-preview-tQpVNdi4.css">
 </head>
 <body>
 
@@ -74,66 +78,6 @@
 
   </div>
 
-  <!-- Component Logic -->
-  <script type="module">
-    import { initMessyStackingSections } from './src/messy-stacking-sections.js';
-    
-    let instance = null;
-
-    const premiumColors = [
-      { bg: '#0f0f0f', text: '#f8f9fa' },
-      { bg: '#1a1a2e', text: '#e0e0ff' },
-      { bg: '#16213e', text: '#94e2ff' },
-      { bg: '#0a1628', text: '#ff9f43' }
-    ];
-
-    function generateSectionHTML(index) {
-      const colors = premiumColors[index % premiumColors.length];
-      const num = String(index + 1).padStart(2, '0');
-      return `
-        <section class="messy-section" style="--bg-color: ${colors.bg}; --text-color: ${colors.text};">
-          <div class="messy-content">
-            <div class="messy-label">${num}</div>
-            <h2 class="messy-heading" data-split>内容 ${num}</h2>
-            <p class="messy-paragraph">这里是内容输入区域，可以替换成任意文字。</p>
-          </div>
-        </section>
-      `;
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      instance = initMessyStackingSections();
-    });
-
-    window.addEventListener('message', (e) => {
-      if (e.data && e.data.type === 'updateConfig') {
-        const { count, intensity } = e.data;
-        
-        if (instance) {
-          instance.destroy();
-        }
-
-        const container = document.querySelector('.messy-stack-container');
-        const currentSections = container.querySelectorAll('.messy-section');
-        const currentCount = currentSections.length;
-
-        if (count > currentCount) {
-          for (let i = currentCount; i < count; i++) {
-            container.insertAdjacentHTML('beforeend', generateSectionHTML(i));
-          }
-        } else if (count < currentCount) {
-          for (let i = currentCount - 1; i >= count; i--) {
-            currentSections[i].remove();
-          }
-        }
-
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            instance = initMessyStackingSections({ rotationIntensity: intensity });
-          });
-        });
-      }
-    });
-  </script>
+  <!-- Component Logic -->
 </body>
 </html>

@@ -10,8 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Inter:wght@400;500;600;700&family=Outfit:wght@600;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- Component Stylesheet -->
-  <link rel="stylesheet" href="./src/curved-arc-carousel.css" />
+  <!-- Component Stylesheet -->
 
   <style>
     html, body {
@@ -77,6 +76,11 @@
       }
     }
   </style>
+  <script type="module" crossorigin src="../../../assets/scroll-trigger-curved-arc-carousel-preview-5cGzAKNA.js"></script>
+  <link rel="modulepreload" crossorigin href="../../../assets/modulepreload-polyfill-Dezn_h7o.js">
+  <link rel="modulepreload" crossorigin href="../../../assets/curved-arc-carousel-CSnACETF.js">
+  <link rel="modulepreload" crossorigin href="../../../assets/lenis-CW6SwARX.js">
+  <link rel="stylesheet" crossorigin href="../../../assets/scroll-trigger-curved-arc-carousel-preview-Dj6Br0Gd.css">
 </head>
 <body>
 
@@ -96,50 +100,12 @@
     <p>你已经看完了全部内容</p>
   </section>
 
-  <!-- Component HTML -->
-  <script type="module">
-    import htmlContent from './src/curved-arc-carousel.html?raw';
-    document.getElementById('componentRoot').innerHTML = htmlContent;
-  </script>
+  <!-- Component HTML -->
 
   <!-- GSAP & ScrollTrigger -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 
-  <!-- Component Init & Lenis -->
-  <script type="module">
-    import { initCurvedArcCarousel } from './src/curved-arc-carousel.js';
-    import Lenis from 'lenis';
-
-    let instance = null;
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const lenis = new Lenis({
-        duration: 1.2,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        smoothWheel: true
-      });
-      window.lenis = lenis;
-
-      lenis.on('scroll', ScrollTrigger.update);
-      gsap.ticker.add((time) => lenis.raf(time * 1000));
-      gsap.ticker.lagSmoothing(0);
-
-      instance = initCurvedArcCarousel();
-    });
-
-    window.addEventListener('message', (event) => {
-      if (event.data && event.data.type === 'updateArcConfig' && instance) {
-        instance.updateConfig({ radius: event.data.radius, gap: event.data.gap });
-        
-        if (event.data.grid !== null && event.data.grid !== undefined) {
-            const root = document.querySelector('.arc-carousel-section');
-            if (root) {
-               root.style.setProperty('--sk-grid', event.data.grid ? 'rgba(0, 0, 0, 0.04)' : 'transparent');
-            }
-        }
-      }
-    });
-  </script>
+  <!-- Component Init & Lenis -->
 </body>
 </html>
