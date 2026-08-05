@@ -1,6 +1,10 @@
-# ✏️ 个人网站
+# ✏️ Lijiantao· 个人网站
 
 手绘笔记本风格的翻书式个人网站。打开封面，像翻阅一本真实的素描本。
+
+> 📄 **说明**：本网站内容复刻自 [ITomPoland/ui-components](https://github.com/ITomPoland/ui-components)（原作者：Tomasz Szmajda），在原项目基础上进行了改造（全站中文化、内容模板化、去作者链接等），**仅作个人使用与学习**，无商业用途。感谢原作者的开源分享。
+>
+> 📦 **模板**：如需把这个网站当作模板复用（无名字的通用版），可到本仓库 **Releases（发行版）** 下载 `personal-website-template.zip`——改个名字、换点内容即可部署成你自己的网站。
 
 ## ✨ 特色
 
